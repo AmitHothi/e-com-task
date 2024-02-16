@@ -1,0 +1,18 @@
+fragment CategoryFragment on Category {
+  _id
+  categoryName
+  attributes {
+    id
+    attributeName
+    value
+  }
+  descreption
+  icon
+  status
+  scope
+  immediateParentId
+  ancestors
+  sortingOrder
+  createdAt
+  updatedAt
+}

@@ -1,0 +1,52 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "turbo run build && chmod ug+x .husky/*",
+    "build:storybook": "turbo run build:storybook && chmod ug+x .husky/*",
+    "dev": "turbo run dev --no-cache --continue",
+    "dev:storybook": "turbo run dev:storybook --no-cache --continue",
+    "format:check": "turbo run format:check",
+    "format:fix": "turbo run format:fix",
+    "lint": "turbo run lint",
+    "lint:check": "turbo run lint:check",
+    "lint:fix": "turbo run lint:fix",
+    "clean": "turbo run clean",
+    "clean:all": "turbo run clean:all && rm -rf node_modules && rm -rf pnpm-lock.yaml",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "turbo run build --filter=docs^... && changeset publish",
+    "prepare": "husky install",
+    "types:check": "turbo run types:check"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix"
+    ]
+  },
+  "dependencies": {
+    "next": "14.0.1",
+    "next-international": "^1.1.3",
+    "next-themes": "^0.2.1",
+    "postcss": "8.4.31",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.2.2"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.26.2",
+    "@commitlint/cli": "^18.2.0",
+    "@commitlint/config-conventional": "^18.1.0",
+    "@typescript-eslint/eslint-plugin": "^6.9.1",
+    "@typescript-eslint/parser": "^6.9.1",
+    "eslint": "^8.53.0",
+    "husky": "^8.0.3",
+    "prettier": "^3.0.3",
+    "turbo": "^1.11.2"
+  },
+  "packageManager": "pnpm@7.15.0"
+}

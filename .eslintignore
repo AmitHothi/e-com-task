@@ -1,0 +1,10 @@
+.husky
+build_scripts
+dist/*
+node_modules
+public
+storybook-static
+tailwind.config.js
+pnpm-lock.yaml
+pnpm-workspace.yaml
+validate-commit-msg.js

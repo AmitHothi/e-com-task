@@ -1,0 +1,7 @@
+#import "../fragments/subProduct.graphql"
+
+query GetOneSubProductById($id: String!) {
+  getOneSubProductById(_id: $id) {
+    ...SubProductFragment
+  }
+}

@@ -1,0 +1,17 @@
+.DS_Store
+node_modules
+.turbo
+*.log
+.next
+dist
+dist-ssr
+*.local
+.env
+.cache
+server/dist
+public/dist
+storybook-static/
+*-lock.yaml
+apps/docs/styles/tailwind.css
+tsconfig.tsbuildinfo
+.env

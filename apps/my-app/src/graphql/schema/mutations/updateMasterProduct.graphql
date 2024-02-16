@@ -1,0 +1,7 @@
+#import "../fragments/masterProduct.graphql"
+
+mutation UpdateMasterProductById($updateMasterProductInput: UpdateMasterProductInput!) {
+  updateMasterProductById(updateMasterProductInput: $updateMasterProductInput) {
+    ...MasterProductFragment
+  }
+}

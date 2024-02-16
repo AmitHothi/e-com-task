@@ -1,0 +1,56 @@
+fragment MasterProductFragment on MasterProduct {
+  _id
+  masterProductName
+  description
+  icon
+  images {
+    id
+    altText
+    order
+    img
+  }
+  sku
+  status
+  scope
+  category {
+    _id
+    categoryName
+    attributes {
+      id
+      attributeName
+      value
+    }
+    descreption
+    icon
+    status
+    scope
+    immediateParentId
+    ancestors
+    sortingOrder
+    createdAt
+    updatedAt
+  }
+  attriburtes {
+    id
+    attributeName
+    value
+  }
+  tags
+  metaTags
+  sortingOrder
+  createdAt
+  updatedAt
+  specification
+  isProductReturnAble
+  returnPeriod
+  warrantyPeriod
+  isExpireAble
+  expirationPeriod
+  isReviewEnabled
+  Brand
+  originCountry
+  visibility
+  products
+  price
+  varientType
+}

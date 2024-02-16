@@ -1,0 +1,7 @@
+#import "../fragments/masterProduct.graphql"
+
+query GetAllMasterProduct($paginationInput: PaginationInput, $searchFields: [String!]) {
+  getAllMasterProduct(paginationInput: $paginationInput, searchFields: $searchFields) {
+    ...MasterProductFragment
+  }
+}

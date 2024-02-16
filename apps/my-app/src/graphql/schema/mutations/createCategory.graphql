@@ -1,0 +1,7 @@
+#import "../fragments/category.graphql"
+
+mutation CreateCategory($createCategoryInput: CreateCategoryInput!) {
+  createCategory(createCategoryInput: $createCategoryInput) {
+    ...CategoryFragment
+  }
+}

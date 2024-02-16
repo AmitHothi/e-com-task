@@ -1,0 +1,7 @@
+#import "../fragments/masterProduct.graphql"
+
+mutation DeleteMasterProductById($id: String!) {
+  deleteMasterProductById(_id: $id) {
+    ...MasterProductFragment
+  }
+}

@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+  # marketing-web:
+  #   container_name: marketing-web
+  #   build:
+  #     context: .
+  #     dockerfile: ./apps/marketing-web/Dockerfile
+  #   restart: always
+  #   ports:
+  #     - 3001:3001
+  # networks:
+  #   - app_network
+  web-portal:
+    container_name: web-portal
+    build:
+      context: .
+      dockerfile: ./apps/web-portal/Dockerfile
+    restart: always
+    ports:
+      - 3002:3002
+    networks:
+      - app_network
+  # lead-portal:
+  #   container_name: lead-portal
+  #   build:
+  #     context: .
+  #     dockerfile: ./apps/lead-portal/Dockerfile
+  #   restart: always
+  #   ports:
+  #     - 3000:3000
+  #   networks:
+  #     - app_network
+  # docs:
+  #   container_name: docs
+  #   build:
+  #     context: .
+  #     dockerfile: ./apps/docs/Dockerfile
+  #   restart: always
+  #   ports:
+  #     - 6009:6009
+  #   networks:
+  #     - app_network
+# Define a network, which allows containers to communicate
+# with each other, by using their container name as a hostname
+# networks:
+#   app_network:
+#     external: true

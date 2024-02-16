@@ -1,0 +1,7 @@
+#import "../fragments/category.graphql"
+
+mutation RemoveCategory($id: String!) {
+  removeCategory(_id: $id) {
+    ...CategoryFragment
+  }
+}

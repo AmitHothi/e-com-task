@@ -1,0 +1,7 @@
+#import "../fragments/masterProduct.graphql"
+
+query GetMasterProduct($id: String!) {
+  getMasterProduct(_id: $id) {
+    ...MasterProductFragment
+  }
+}

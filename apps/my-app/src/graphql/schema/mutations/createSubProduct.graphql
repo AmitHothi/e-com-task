@@ -1,0 +1,7 @@
+#import "../fragments/subProduct.graphql"
+
+mutation CreateSubProduct($createSubProductInput: CreateSubProductInput!) {
+  createSubProduct(createSubProductInput: $createSubProductInput) {
+    ...SubProductFragment
+  }
+}
