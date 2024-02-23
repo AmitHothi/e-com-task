@@ -1,14 +1,14 @@
 import { randomBytes } from 'crypto';
-import React, { ChangeEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, useState } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import axios from 'axios';
 import { getCookie } from 'cookies-next';
 import { AiOutlineClose } from 'react-icons/ai';
 import Select from '@/components/Select';
-import CREATE_SUB_PRODUCT from '@/graphql/schema/mutations/createSubProduct.graphql';
-import GET_SUBPRODUCT_BY_ID from '@/graphql/schema/queries/subProductById.graphql';
+import UPDATE_SUB_PRODUCT from '@/graphql/schema/mutations/updateSubProduct.graphql';
+import SUBPRODUCT_BY_ID from '@/graphql/schema/queries/subProductById.graphql';
 import { ICategory } from '@/types';
 
 interface IVariantForm {
@@ -24,7 +24,6 @@ interface IMasterImage {
   altText: string;
   order: string;
   img: string;
-  variantId: string;
 }
 
 export interface ISubProducts {
@@ -34,7 +33,7 @@ export interface ISubProducts {
   handleRemoveSubVariant: (id: string) => void;
 }
 
-const SubProduct = ({
+const UpdateSubProduct = ({
   variantId,
   category,
   categoryData,
@@ -44,7 +43,7 @@ const SubProduct = ({
   const searchParams = useSearchParams();
 
   const masterProductId = searchParams.get('id');
-  console.log('search', variantId);
+  console.log('search', masterProductId);
   const [subVariants, setSubVariants] = useState([]);
   const [subValue, setSubValue] = useState<IVariantForm>({
     subProductName: '',
@@ -53,68 +52,57 @@ const SubProduct = ({
     sku: '',
     image: [],
   });
-  const [varId, setVarId] = useState(variantId);
 
   const [
-    CreateSubProduct,
+    updateSubProduct,
     { data: subProductData, loading: subproductLoading, error: subProductError },
-  ] = useMutation(CREATE_SUB_PRODUCT, {
+  ] = useMutation(UPDATE_SUB_PRODUCT, {
     fetchPolicy: 'network-only',
   });
 
-  // const [subProductById, { data: subProductByIdData, loading: subProductByIdLoading }] =
-  //   useLazyQuery(GET_SUBPRODUCT_BY_ID, {
-  //     fetchPolicy: 'network-only',
-  //     onCompleted(data) {
-  //       console.log('sub-Data-id', data);
-  //       // setSubValue({
-  //       //   subProductName: data.subProductName,
-  //       //   description: data.description,
-  //       //   sku: data.sku,
-  //       //   price: data.prices,
-  //       //   image: data.customImages,
-  //       // });
-  //       // setSubVariants(data.subVariant);
-  //     },
-  //   });
-  // console.log('subid-data', subProductByIdData);
+  const { data: subProductDataById, loading } = useQuery(SUBPRODUCT_BY_ID, {
+    fetchPolicy: 'network-only',
+    variables: { id: variantId },
+    onCompleted(data) {
+      console.log('subDataById', data);
+      const updatedData = data?.getOneSubProductById;
+      setSubValue({
+        subProductName: updatedData.subProductName,
+        price: updatedData.prices,
+        description: updatedData.description,
+        sku: updatedData.sku,
+        image: updatedData.customImages,
+      });
+      if (updatedData?.subVariant) {
+        setSubVariants(updatedData?.subVariant);
+      }
+    },
+  });
 
   const handleVariantSubmit = () => {
-    if (
-      subValue.subProductName &&
-      subValue.description &&
-      subValue.price &&
-      subValue.sku &&
-      subValue.image.length > 0 &&
-      subValue.image[0].img
-    ) {
-      CreateSubProduct({
-        variables: {
-          createSubProductInput: {
-            subProductName: subValue.subProductName,
-            attributes: categoryData?.categories?.categories?.find(
-              (val: ICategory) => val?._id === category,
-            )?.attributes,
-            subVariant: subVariants,
-            description: subValue.description,
-            customImages: subValue.image,
-            sku: subValue.sku,
-            prices: parseInt(subValue.price, 10),
-            masterProductId,
-          },
+    updateSubProduct({
+      variables: {
+        updateSubProductInput: {
+          subProductName: subValue.subProductName,
+          description: subValue.description,
+          attributes: categoryData?.categories?.categories?.find(
+            (val: ICategory) => val?._id === category,
+          )?.attributes,
+          subVariant: subVariants,
+          customImages: subValue.image,
+          sku: subValue.sku,
+          prices: parseInt(subValue.price, 10),
+          masterProductId,
+          _id: variantId,
         },
+      },
+    })
+      .then((res) => {
+        console.log(res.data);
+        // router.push('/product');
       })
-        .then((res) => {
-          console.log(res.data);
-          console.log('variantId', variantId);
-        })
-        .catch((err) => console.log(err));
-    } else {
-      alert('fill data');
-    }
+      .catch((err) => console.log(err));
   };
-
-  console.log('subValue', subValue);
 
   const handleSubVariantChange = (
     event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
@@ -132,40 +120,33 @@ const SubProduct = ({
     setSubValue((prevVariant) => ({ ...prevVariant, [name]: value }));
   };
 
-  // useEffect(() => {
-  //   if (variantId) {
-  //     subProductById({
-  //       variables: { id: variantId },
-  //     });
-  //   }
-  // }, [masterProductId]);
-
   const handleAddVariantImage = async (event: ChangeEvent<HTMLInputElement>) => {
+    event.preventDefault();
     const id = randomBytes(16).toString('hex');
-    console.log({ varId });
     // const imgArray = variants.find((val) => val.id === variantId);
-    // if (event.target.files && event.target.files[0]) {
-    //   const formData = new FormData();
-    //   const token = getCookie('token');
-    //   formData.append('files', event.target.files[0]);
-    //   const response = await axios.post(`${process.env.BASE_URL}/images/upload`, formData, {
-    //     headers: {
-    //       'Content-Type': 'multipart/formData',
-    //       Authorization: `Bearer ${token}`,
-    //     },
-    //   });
-    //   const res = response.data;
-    //   console.log(res);
-    //   const valueImage: IMasterImage = { id, variantId, altText: '', order: '', img: res[0] };
-    //   // const value = { imgId: id, variantId, file: event.target.files[0] };
-    //   console.log({ valueImage });
-    //   setSubValue((prevVariant) => ({
-    //     ...prevVariant,
-    //     image: [...prevVariant.image, valueImage],
-    //   }));
-    //   // setVariantImage((prev) => [...prev, value]);
-    // }
+    if (event.target.files && event.target.files[0]) {
+      const formData = new FormData();
+      const token = getCookie('token');
+      formData.append('files', event.target.files[0]);
+      const response = await axios.post(`${process.env.BASE_URL}/images/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/formData',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const res = response.data;
+      console.log(res);
+      const valueImage: IMasterImage = { id, altText: '', order: '', img: res[0] };
+      // const value = { imgId: id, variantId, file: event.target.files[0] };
+
+      setSubValue((prevVariant) => ({
+        ...prevVariant,
+        image: [...prevVariant.image, valueImage],
+      }));
+      // setVariantImage((prev) => [...prev, value]);
+    }
   };
+  //   console.log('amit', variants);
 
   const handleImageTextVariant = (
     event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
@@ -202,7 +183,6 @@ const SubProduct = ({
       image: subValue.image.filter((img) => img.id !== imgVariantId),
     }));
   };
-  console.log('V', varId);
 
   return (
     <div className="p-4 bg-white min-w-full border-0 rounded-md ">
@@ -321,7 +301,6 @@ const SubProduct = ({
         <div className=" text-gray-900 text-sm">Alt text</div>
         <div className="text-gray-900 text-sm">Order</div>
       </div>
-
       {subValue?.image.map((img) => {
         console.log('imageText', img);
         // const imgVariant = variantImage.find(
@@ -382,27 +361,16 @@ const SubProduct = ({
         <label htmlFor="upload-VariantImage" className="text-yellow-500 font-semibold w-fit">
           <h5>Upload Your Images</h5>
           <input
-            key={varId}
             id="upload-VariantImage"
             type="file"
             style={{ display: 'none' }}
             accept="image/*"
-            onChange={(e) => {
-              console.log('vId', varId);
-              handleAddVariantImage(e);
-            }}
+            onChange={(e) => handleAddVariantImage(e)}
           />
-          <button
-            type="button"
-            onClick={(e) => {
-              console.log('vId', varId);
-            }}>
-            VariantId
-          </button>
         </label>
       </div>
     </div>
   );
 };
 
-export default SubProduct;
+export default UpdateSubProduct;

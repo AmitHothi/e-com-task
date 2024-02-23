@@ -20,17 +20,20 @@ fragment MasterProductFragment on MasterProduct {
       attributeName
       value
     }
-    descreption
+    description
     icon
     status
     scope
     immediateParentId
-    ancestors
-    sortingOrder
+    ancestors {
+      id
+      categoryName
+      sortingOrder
+    }
     createdAt
     updatedAt
   }
-  attriburtes {
+  attributes {
     id
     attributeName
     value
@@ -51,6 +54,5 @@ fragment MasterProductFragment on MasterProduct {
   originCountry
   visibility
   products
-  price
   varientType
 }

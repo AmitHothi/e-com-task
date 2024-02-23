@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { deleteCookie } from 'cookies-next';
 import MyImage from '../../../public/IMG_20210330_194930.jpg';
 
 const Navbar = () => {
@@ -14,6 +15,8 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
+    deleteCookie('token');
+    deleteCookie('refreshToken');
     router.push('/login');
     // onLogout();
     // handleToggleMenu();
@@ -64,10 +67,12 @@ const Navbar = () => {
 
             <div className="relative">
               {isOpen && (
-                <ul className="bg-white border-2 rounded-md  shadow-lg text-sm w-32 flex flex-col py-1 px-2">
-                  <li className="items-center my-1 p-2 text-gray-900  rounded-md hover:bg-gray-100 dark:hover:bg-zinc-200 group">
-                    DashBoard
-                  </li>
+                <div className="bg-white border-2 rounded-md  shadow-y-2xl text-sm w-32 flex flex-col py-1 px-2">
+                  <button
+                    type="button"
+                    className="items-center my-1 p-2 text-gray-900  rounded-md hover:bg-gray-100 dark:hover:bg-zinc-200 group">
+                    Profile
+                  </button>
                   <hr />
                   <button
                     type="button"
@@ -75,7 +80,7 @@ const Navbar = () => {
                     className="items-center my-1 p-2 text-gray-900 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-200 group">
                     LogOut
                   </button>
-                </ul>
+                </div>
               )}
             </div>
           </div>

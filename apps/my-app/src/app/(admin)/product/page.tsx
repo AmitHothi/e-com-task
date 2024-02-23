@@ -1,9 +1,10 @@
 'use client';
 
-import { MouseEvent, useState } from 'react';
+import { MouseEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMutation, useQuery } from '@apollo/client';
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
+import { debounce } from 'lodash';
 import { CiImport } from 'react-icons/ci';
 import { FaPlus } from 'react-icons/fa6';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
@@ -410,23 +411,51 @@ import { BreadcrumbItem, IMasterProduct, ISort, ISubProduct, ITableColumn } from
 //   },
 // ];
 
+interface IFilter {
+  page: number;
+  limit: number;
+  searchField?: string[];
+  searchText: string;
+  sortDirection: 'ASC' | 'DESC';
+  sortField: string;
+}
+
 const Product = () => {
   const router = useRouter();
 
-  const [sort, setSort] = useState<ISort>({ sortField: 'name', sortDirection: 'ASC' });
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [selectedPopoverId, setSelectedPopoverId] = useState('');
   const [isCheck, setIsCheck] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState<IFilter>({
+    page: 1,
+    limit: 10,
+    searchField: ['masterProductName', 'category.categoryName'],
+    searchText: '',
+    sortDirection: 'DESC',
+    sortField: 'masterProductName',
+  });
 
   const {
     data: allMasterProductData,
-    loading: allMasterProductLoading,
+    loading,
     refetch,
   } = useQuery(GET_ALL_MASTERPRODUCTS, {
     fetchPolicy: 'network-only',
+    variables: {
+      paginationInput: {
+        page: filter.page,
+        limit: filter.limit,
+        search: filter.searchText,
+        sortField: filter.sortField,
+        sortOrder: filter.sortDirection,
+        minPrice: 450,
+        maxPrice: 50000,
+      },
+      searchFields: filter.searchField,
+    },
   });
-  console.log('masterProducts', allMasterProductData?.getAllMasterProduct);
+  console.log('masterProducts', allMasterProductData?.getAllMasterProduct?.masterProducts);
+  console.log('totalCountM', allMasterProductData?.getAllMasterProduct?.totalCount);
 
   const [
     DeleteMasterProductById,
@@ -442,11 +471,7 @@ const Product = () => {
   const { data: allSubproductData, loading: allSubproductloading } = useQuery(GET_ALL_SUBPRODUCTS, {
     fetchPolicy: 'network-only',
   });
-  console.log('subProducts', allSubproductData?.getAllSubProducts);
-
-  const handleSearchQueryChange = (query: string) => {
-    setSearchQuery(query);
-  };
+  console.log('subProducts', allSubproductData?.getAllSubProducts?.subProducts);
 
   const handleEditMasterproduct = (masterProductId: string) => {
     router.push(`/product/update/${masterProductId}`);
@@ -460,8 +485,6 @@ const Product = () => {
     })
       .then((res) => {
         console.log('del', res.data);
-        // console.log('del', masterProductId);
-
         refetch();
       })
       .catch((err) => console.log(err));
@@ -489,12 +512,12 @@ const Product = () => {
     router.push('/product/add');
   };
 
-  const filteredProducts = allMasterProductData?.getAllMasterProduct.filter(
-    (product: IMasterProduct) =>
-      product.masterProductName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.category.categoryName.toLowerCase().includes(searchQuery.toLowerCase()),
-    // You can add more fields for searching if needed
-  );
+  // const filteredProducts = allMasterProductData?.getAllMasterProduct.filter(
+  //   (product: IMasterProduct) =>
+  //     product.masterProductName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     product.category.categoryName.toLowerCase().includes(searchQuery.toLowerCase()),
+  //   // You can add more fields for searching if needed
+  // );
   const columns: ITableColumn[] = [
     {
       key: 'masterProductName',
@@ -521,7 +544,9 @@ const Product = () => {
         );
       },
       isSorting: true,
-      sortType: sort.sortDirection,
+      ...(filter.sortField === 'masterProductName' && {
+        sortType: filter.sortDirection,
+      }),
     },
     {
       key: 'category',
@@ -531,20 +556,38 @@ const Product = () => {
         return <div>{val?.category?.categoryName}</div>;
       },
       isSorting: true,
-      sortType: sort.sortDirection,
+      ...(filter.sortField === 'category' && {
+        sortType: filter.sortDirection,
+      }),
     },
-    // { key: 'category', label: 'Category', isSorting: true, sortType: sort.sortDirection },
     {
-      key: 'subProductName',
-      label: 'subProduct',
-      isSorting: true,
-      sortType: sort.sortDirection,
+      key: 'createdAt',
+      label: 'CreatedAt',
       render: (key, value) => {
-        const val = value as ISubProduct;
-        return <div>{val?.subProductName}</div>;
+        const val = value as IMasterProduct;
+        const createdAtDate = new Date(val.createdAt);
+        const formattedCreatedAt = createdAtDate.toLocaleDateString('en-GB');
+        return <div>{formattedCreatedAt}</div>;
       },
+      isSorting: true,
+      ...(filter.sortField === 'createdAt' && {
+        sortType: filter.sortDirection,
+      }),
     },
-    { key: 'price', label: 'Price', isSorting: true, sortType: sort.sortDirection },
+    {
+      key: 'updatedAt',
+      label: 'UpdatedAt',
+      render: (key, value) => {
+        const val = value as IMasterProduct;
+        const updatedAtDate = new Date(val.updatedAt);
+        const formattedUpdatedAt = updatedAtDate.toLocaleDateString('en-GB');
+        return <div>{formattedUpdatedAt}</div>;
+      },
+      isSorting: true,
+      ...(filter.sortField === 'updatedAt' && {
+        sortType: filter.sortDirection,
+      }),
+    },
     {
       key: 'edit',
       label: '',
@@ -591,51 +634,72 @@ const Product = () => {
 
   return (
     <div>
-      <div className="text-sm text-gray-500">
-        <Breadcrumbs items={breadcrumbs} />
-      </div>
-      <div className="flex justify-between mt-0 ">
-        <h1 className="font-bold text-2xl "> Product</h1>
-        <div className="grid grid-cols-[116px,auto]">
-          <button
-            type="button"
-            // onClick={handleClose}
-            className="py-1 px-2 w-24 text-gray-900 border-0 rounded-md bg-gray-300 flex gap-1">
-            <CiImport className="text-lg mt-0.5" />
-            import
-          </button>
-          <button
-            type="submit"
-            onClick={handleAddProduct}
-            className="py-1.5 px-2 h-8 text-gray-900 border-0  rounded-md bg-yellow-500 flex gap-1">
-            <FaPlus className="text-lg mt-0.5" />
-            Add Product
-          </button>
-        </div>
-      </div>
-      <div>
-        {' '}
-        <div className="mt-4 grid grid-cols-[120px,auto] md:grid-cols-[220px,auto] gap-2">
-          <div className="col-span-1">
-            <Filter />
+      <div className="flex flex-col gap-4">
+        <div>
+          <div className="text-sm text-gray-500">
+            <Breadcrumbs items={breadcrumbs} />
           </div>
-          <div className="col-span-1">
-            <Table
-              columns={columns}
-              handleSearch={handleSearchQueryChange}
-              data={filteredProducts || []}
-              pageSize={10}
-              rowsPerPageOption={[5, 10, 15, 25]}
-              isPagination
-              checkedRow={isCheck}
-              handleCheckBox={(checked, checkedData) => handleSelectAll(checked, checkedData)}
-              selectionField="_id"
-              isCheckBox
-              activeSortField={sort.sortField}
-              onSortClick={(key, sortType) => {
-                setSort({ sortField: key as string, sortDirection: sortType });
-              }}
-            />
+          <div className="flex justify-between">
+            <h1 className="font-bold text-2xl "> Products</h1>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                // onClick={handleClose}
+                className="p-1.5 text-gray-900 border-0 rounded-md bg-gray-300 flex gap-1">
+                <CiImport className="text-lg my-0.5" />
+                import
+              </button>
+              <button
+                type="submit"
+                onClick={handleAddProduct}
+                className="p-1.5 text-gray-900 border-0  rounded-md bg-yellow-500 flex gap-1">
+                <FaPlus className="text-lg my-0.5" />
+                Add Product
+              </button>
+            </div>
+          </div>
+        </div>
+        <div>
+          {' '}
+          <div className="grid grid-cols-[120px,auto] lg:grid-cols-[220px,auto] gap-2">
+            <div className="col-span-1">
+              <Filter />
+            </div>
+            <div className="col-span-1">
+              <Table
+                loading={loading}
+                columns={columns}
+                data={allMasterProductData?.getAllMasterProduct?.masterProducts || []}
+                count={allMasterProductData?.getAllMasterProduct?.totalCount || 0}
+                apiPaginationEnable
+                page={filter.page}
+                pageSize={filter.limit}
+                rowsPerPageOption={[1, 2, 3, 5, 10, 15, 25]}
+                isPagination
+                handlePageChange={(newPage: number) => {
+                  setFilter({ ...filter, page: newPage });
+                }}
+                handleRowsPerPageChange={(e) => {
+                  setFilter({ ...filter, page: 1, limit: parseInt(e, 10) });
+                }}
+                onHandleSearch={debounce((e) => {
+                  setFilter({ ...filter, page: 1, searchText: e.target.value });
+                }, 500)}
+                checkedRow={isCheck}
+                handleCheckBox={(checked, checkedData) => handleSelectAll(checked, checkedData)}
+                selectionField="_id"
+                isCheckBox
+                activeSortField={filter.sortField}
+                onSortClick={(key, sortType) => {
+                  setFilter({
+                    ...filter,
+                    page: 1,
+                    sortField: key as string,
+                    sortDirection: sortType,
+                  });
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>

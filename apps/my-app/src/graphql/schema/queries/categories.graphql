@@ -1,7 +1,10 @@
 #import "../fragments/category.graphql"
 
-query Categories {
-  categories {
-    ...CategoryFragment
+query Categories($paginationInput: PaginationInput, $searchFields: [String!]) {
+  categories(paginationInput: $paginationInput, searchFields: $searchFields) {
+    categories {
+      ...CategoryFragment
+    }
+    totalCount
   }
 }

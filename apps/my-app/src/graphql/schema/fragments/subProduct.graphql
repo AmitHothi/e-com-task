@@ -1,32 +1,33 @@
 fragment SubProductFragment on SubProduct {
   _id
-    subProductName
-    description
-    attriburtes {
-      id
-      attributeName
-      value
-    }
-    store
-    icon
-    customImages {
-      id
-      altText
-      order
-      img
-    }
-    sku
-    scope
-    masterProduct
-    barcode
-    prices
-    isProductReturnAble
-    returnPeriod
-    warrantyPeriod
-    isExpireAble
-    expirationPeriod
-    isReviewEnabled
-    status
-    createdAt
-    updatedAt
+  subProductName
+  description
+  attributes {
+    id
+    attributeName
+    value
+  }
+  subVariant
+  store
+  icon
+  customImages {
+    id
+    altText
+    order
+    img
+  }
+  sku
+  scope
+  masterProductId
+  barcode
+  prices
+  isProductReturnAble
+  returnPeriod
+  warrantyPeriod
+  isExpireAble
+  expirationPeriod
+  isReviewEnabled
+  status
+  createdAt
+  updatedAt
 }

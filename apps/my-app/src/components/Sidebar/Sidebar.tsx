@@ -3,6 +3,7 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { BiCoinStack } from 'react-icons/bi';
 import { BsBoxSeam } from 'react-icons/bs';
 import { HiMenu } from 'react-icons/hi';
 import { MdOutlineCategory, MdOutlineDashboardCustomize } from 'react-icons/md';
@@ -61,6 +62,18 @@ const Sidebar = () => {
       ),
     },
     {
+      path: '/category',
+      title: 'Category',
+      icon: (
+        <MdOutlineCategory
+          className={cn('text-xl text-gray-400 group-hover:text-yellow-500', {
+            'text-yellow-500 ': currentPath === '/category',
+            'text-gray-900 dark:text-white': currentPath !== '/category',
+          })}
+        />
+      ),
+    },
+    {
       path: '/product',
       title: 'Product',
       icon: (
@@ -73,13 +86,13 @@ const Sidebar = () => {
       ),
     },
     {
-      path: '/category',
-      title: 'Category',
+      path: '/subProduct',
+      title: 'Sub Product',
       icon: (
-        <MdOutlineCategory
+        <BiCoinStack
           className={cn('text-xl text-gray-400 group-hover:text-yellow-500', {
-            'text-yellow-500 ': currentPath === '/category',
-            'text-gray-900 dark:text-white': currentPath !== '/category',
+            'text-yellow-500 ': currentPath === '/subProduct',
+            'text-gray-900 dark:text-white': currentPath !== '/subProduct',
           })}
         />
       ),

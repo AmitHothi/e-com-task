@@ -1,7 +1,10 @@
 #import "../fragments/subProduct.graphql"
 
-query GetAllSubProducts {
-  getAllSubProducts {
-    ...SubProductFragment
+query SubProducts($paginationInput: PaginationInput, $searchFields: [String!]) {
+  getAllSubProducts(paginationInput: $paginationInput, searchFields: $searchFields) {
+    subProducts {
+     ...SubProductFragment
+    }
+    totalCount
   }
 }

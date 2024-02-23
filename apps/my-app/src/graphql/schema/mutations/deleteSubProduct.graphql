@@ -1,24 +1,7 @@
+#import "../fragments/subProduct.graphql"
+
 mutation DeleteSubProductById($id: String!) {
   deleteSubProductById(_id: $id) {
-    _id
-    attributes
-    description
-    store
-    icon
-    customImages
-    sku
-    scope
-    masterProduct
-    barcode
-    prices
-    isProductReturnAble
-    returnPeriod
-    warrantyPeriod
-    isExpireAble
-    expirationPeriod
-    isReviewEnabled
-    status
-    updatedAt
-    createdAt
+    ...SubProductFragment
   }
 }

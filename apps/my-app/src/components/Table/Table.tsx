@@ -2,7 +2,15 @@
 
 'use client';
 
-import { ReactNode, HTMLAttributes, forwardRef, useState, ReactElement, useEffect } from 'react';
+import {
+  ReactNode,
+  HTMLAttributes,
+  forwardRef,
+  useState,
+  ReactElement,
+  useEffect,
+  ChangeEventHandler,
+} from 'react';
 import { CiSearch } from 'react-icons/ci';
 import { ICategory, IMasterProduct, ITableColumn, ITableData } from '@/types';
 import { cn } from '@/utils';
@@ -94,7 +102,7 @@ export interface ITableProps extends HTMLAttributes<HTMLTableElement> {
   /**
    * handle search fuction
    */
-  handleSearch?: (query: string) => void;
+  onHandleSearch?: (e: ChangeEventHandler<HTMLInputElement> | undefined) => void;
   /**
    * classes for styling
    */
@@ -128,7 +136,10 @@ export interface ITableProps extends HTMLAttributes<HTMLTableElement> {
   /**
    * on sort click
    */
-  onSortClick?: (columnName: string | ReactElement | ReactNode, sortType: 'ASC' | 'DESC') => void;
+  onSortClick?: (
+    columnName: keyof ITableData | ICategory | IMasterProduct,
+    sortType: 'ASC' | 'DESC',
+  ) => void;
 }
 
 const Table = forwardRef<HTMLTableElement, ITableProps>(
@@ -149,7 +160,7 @@ const Table = forwardRef<HTMLTableElement, ITableProps>(
       selectionField,
       checkedRow = [],
       handleCheckBox = () => null,
-      handleSearch,
+      onHandleSearch = () => null,
       className = '',
       aboveTableChildren,
       apiPaginationEnable = false,
@@ -167,7 +178,7 @@ const Table = forwardRef<HTMLTableElement, ITableProps>(
     const [rowsPerPage, setRowsPerPage] = useState(pageSize);
     const lastIndex = (apiPaginationEnable ? page : pageNo) * rowsPerPage;
     const firstIndex = lastIndex - rowsPerPage;
-    const tableRecords = tableData.slice(firstIndex, lastIndex);
+    const tableRecords = tableData?.slice(firstIndex, lastIndex);
 
     useEffect(() => {
       if (data) {
@@ -236,28 +247,28 @@ const Table = forwardRef<HTMLTableElement, ITableProps>(
       col: keyof ITableData | ICategory | IMasterProduct,
       sortType: 'ASC' | 'DESC',
     ) => {
-      if (!apiPaginationEnable) {
-        if (sortOrder === 'ASC') {
-          const sorted = [...data].sort((a, b) => {
-            if (typeof a[col] === 'number') return a[`${col}`] > b[col] ? 1 : -1;
-            return (a[`${col}`] as string).toLowerCase() > (b[col] as string).toLowerCase()
-              ? 1
-              : -1;
-          });
-          setTableData(sorted);
-          setSortOrder('DSC');
-        }
-        if (sortOrder === 'DSC') {
-          const sorted = [...data].sort((a, b) => {
-            if (typeof a[col] === 'number') return a[`${col}`] < b[col] ? 1 : -1;
-            return (a[`${col}`] as string).toLowerCase() < (b[col] as string).toLowerCase()
-              ? 1
-              : -1;
-          });
-          setTableData(sorted);
-          setSortOrder('ASC');
-        }
-      }
+      // if (!apiPaginationEnable) {
+      //   if (sortOrder === 'ASC') {
+      //     const sorted = [...data].sort((a, b) => {
+      //       if (typeof a[col] === 'number') return a[`${col}`] > b[col] ? 1 : -1;
+      //       return (a[`${col}`] as string).toLowerCase() > (b[col] as string).toLowerCase()
+      //         ? 1
+      //         : -1;
+      //     });
+      //     setTableData(sorted);
+      //     setSortOrder('DSC');
+      //   }
+      //   if (sortOrder === 'DSC') {
+      //     const sorted = [...data].sort((a, b) => {
+      //       if (typeof a[col] === 'number') return a[`${col}`] < b[col] ? 1 : -1;
+      //       return (a[`${col}`] as string).toLowerCase() < (b[col] as string).toLowerCase()
+      //         ? 1
+      //         : -1;
+      //     });
+      //     setTableData(sorted);
+      //     setSortOrder('ASC');
+      //   }
+      // }
       onSortClick(col, sortType);
     };
 
@@ -276,7 +287,7 @@ const Table = forwardRef<HTMLTableElement, ITableProps>(
                   <input
                     type="text"
                     id="search-navbar"
-                    onChange={(e) => handleSearch?.(e.target.value)}
+                    onChange={(e) => onHandleSearch(e)}
                     className="  w-full h-8 p-2  ps-10 text-s text-gray-900 border border-gray-300 rounded-full bg-white  dark:placeholder-gray-400 dark:focus:border-gray-500"
                     placeholder="Search by productName or category..."
                   />
@@ -320,18 +331,21 @@ const Table = forwardRef<HTMLTableElement, ITableProps>(
                                   marginLeft: isSorting ? '0' : undefined,
                                   cursor: isSorting ? 'pointer' : 'default',
                                 }}>
-                                <div className={cn('text-red-500', columnClass)}>{label}</div>
+                                <div className={cn('text-neutral-500', columnClass)}>{label}</div>
                                 {isSorting && (
-                                  <SvgIcon
-                                    icon="DOWN_ARROW"
-                                    viewBox="0 0 16 16"
-                                    className={cn('h-3 opacity-0', {
+                                  <div
+                                    className={cn('opacity-0', {
                                       'opacity-100': activeSortField === key,
                                       'group-hover:opacity-70': isSorting,
                                       'transform rotate-180':
                                         activeSortField === key && sortType === 'DESC',
-                                    })}
-                                  />
+                                    })}>
+                                    <SvgIcon
+                                      className="h-[0.85rem]"
+                                      icon="DOWN_ARROW"
+                                      viewBox="0 0 16 16"
+                                    />
+                                  </div>
                                 )}
                               </div>
                             </th>
@@ -381,7 +395,7 @@ const Table = forwardRef<HTMLTableElement, ITableProps>(
 
                             return (
                               <td
-                                className={cn('text-blue-400 text-left font-poppins', columnClass)}
+                                className={cn('text-gray-900 text-left font-poppins', columnClass)}
                                 key={`index_${index + 1}`}>
                                 {value}
                               </td>

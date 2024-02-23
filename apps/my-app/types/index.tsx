@@ -63,23 +63,14 @@ export interface ICategoryAttributes {
 
 export interface ICategory {
   _id: string;
-
   categoryName: string;
-
   attributes: ICategoryAttributes[];
-
-  descreption: string;
-
+  description: string;
   icon: string;
-
   status: string;
-
   scope: string;
-
   immediateParentId: string;
-
   ancestors: string;
-
   sortingOrder: number;
   createdAt: string;
   updatedAt: string;
@@ -108,7 +99,7 @@ export interface IMasterProduct {
   status: string;
   scope: string;
   category: ICategory;
-  attriburtes: IMasterProductAttributes[];
+  attributes: IMasterProductAttributes[];
   tags: string;
   metaTags: string;
   sortingOrder: number;
@@ -129,6 +120,12 @@ export interface IMasterProduct {
   varientType: string;
 }
 
+export interface ISubProductImage {
+  id: string;
+  altText: string;
+  order: string;
+  img: string;
+}
 export interface ISubProduct {
   _id: string;
   subProductName?: string;
@@ -136,7 +133,7 @@ export interface ISubProduct {
   attributes?: string;
   store?: string;
   icon?: string;
-  customImages?: string;
+  customImages?: ISubProductImage[];
   sku?: string;
   scope?: string;
   masterProduct?: IMasterProduct;

@@ -6,13 +6,16 @@ fragment CategoryFragment on Category {
     attributeName
     value
   }
-  descreption
+  description
   icon
   status
   scope
   immediateParentId
-  ancestors
-  sortingOrder
+  ancestors {
+    id
+    categoryName
+    sortingOrder
+  }
   createdAt
   updatedAt
 }

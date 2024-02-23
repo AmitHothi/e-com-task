@@ -2,9 +2,9 @@
 
 import React, { MouseEvent, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@apollo/client';
+import { debounce } from 'lodash';
 import { CiImport } from 'react-icons/ci';
 import { FaPlus } from 'react-icons/fa6';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
@@ -15,14 +15,29 @@ import CATEGORIES from '@/graphql/schema/queries/categories.graphql';
 import { BreadcrumbItem, ICategory, ISort, ITableColumn } from '@/types';
 import Breadcrumbs from '../../../components/Breadcrumbs';
 
+interface IFilter {
+  page: number;
+  limit: number;
+  searchField?: string[];
+  searchText: string;
+  sortDirection: 'ASC' | 'DESC';
+  sortField: string;
+}
+
 const Category = () => {
-  const [sort, setSort] = useState<ISort>({ sortField: 'name', sortDirection: 'ASC' });
-  const [selectedPopoverId, setSelectedPopoverId] = useState('');
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const breadcrumbs: BreadcrumbItem[] = [{ label: '/category', link: '/category' }];
   const router = useRouter();
 
-  const breadcrumbs: BreadcrumbItem[] = [{ label: '/category', link: '/category' }];
+  const [selectedPopoverId, setSelectedPopoverId] = useState('');
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [filter, setFilter] = useState<IFilter>({
+    page: 1,
+    limit: 10,
+    searchField: ['categoryName'],
+    searchText: '',
+    sortDirection: 'DESC',
+    sortField: 'categoryName',
+  });
 
   const {
     data: categoryData,
@@ -30,51 +45,56 @@ const Category = () => {
     refetch,
   } = useQuery(CATEGORIES, {
     fetchPolicy: 'network-only',
+    variables: {
+      paginationInput: {
+        page: filter.page,
+        limit: filter.limit,
+        search: filter.searchText,
+        sortField: filter.sortField,
+        sortOrder: filter.sortDirection,
+        minPrice: 0,
+        maxPrice: 5000,
+      },
+      searchFields: filter.searchField,
+    },
   });
-  console.log('data', categoryData?.categories);
+  console.log('data', categoryData?.categories?.categories);
 
   const [RemoveCategory, { data, loading, error }] = useMutation(REMOVE_CATEGORY, {
     fetchPolicy: 'network-only',
   });
 
-  const handleSearchCategory = (query: string) => {
-    setSearchQuery(query);
-  };
-
-  const filteredCategorys = categoryData?.categories.filter((category: ICategory) =>
-    category.categoryName.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-  // const filteredCategorys = categoryData?.categories.filter(
-  //   (category: ICategory) =>
-  //     category.categoryName.toLowerCase().includes(searchQuery.toLowerCase()),
-  //   // You can add more fields for searching if needed
-  // );
-  const handleAddCategory = () => {
+  // function for createCategory
+  const handleCreateCategory = () => {
     router.push('/category/add');
   };
 
+  // function for category edit/delete popover
   const handleClick = (event: MouseEvent<HTMLButtonElement>, id: string) => {
     setAnchorEl(event.currentTarget);
     setSelectedPopoverId(id);
   };
 
+  // function for close popover
   const handleClose = () => {
     setAnchorEl(null);
   };
 
+  // function for edit category
   const handleEditCategory = (categoryId: string) => {
     router.push(`category/update/${categoryId}`);
   };
 
+  // function for remove category
   const handleDeleteCategory = (categoryId: string) => {
     RemoveCategory({
       variables: { id: categoryId },
     })
       .then((res) => {
-        console.log('remove', res.data);
+        console.log('category-remove', res.data);
         refetch();
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.log('removeCategory-error', err));
   };
 
   const columns: ITableColumn[] = [
@@ -82,15 +102,17 @@ const Category = () => {
       key: 'categoryName',
       label: 'CategoryName',
       isSorting: true,
-      sortType: sort.sortDirection,
+      ...(filter.sortField === 'categoryName' && {
+        sortType: filter.sortDirection,
+      }),
       render: (key, value) => {
         const val = value as ICategory;
         return (
-          <div className="flex gap-4 items-center">
+          <div key={val._id} className="flex gap-4 items-center">
             <Image
               width={30}
-              height={30}
-              className=" w-12 h-9 mt-1 lg:w-12 lg:h-9 rounded-md border-1"
+              height={100}
+              className=" w-12  mt-1  rounded-md border-1"
               src={`${process.env.BASE_URL}/images/${val.icon}`}
               alt="user"
             />
@@ -98,28 +120,42 @@ const Category = () => {
           </div>
         );
       },
+      columnClass: 'pl-2 text-center',
     },
     {
       key: 'createdAt',
       label: 'CreatedAt',
+      render: (key, value) => {
+        const val = value as ICategory;
+        const createdAtDate = new Date(val.createdAt);
+        const formattedCreatedAt = createdAtDate.toLocaleDateString('en-GB');
+        return <div>{formattedCreatedAt}</div>;
+      },
       isSorting: true,
-      sortType: sort.sortDirection,
-      columnClass: 'text-center',
-      headerClass: 'pl-8 lg:pl-48',
+      ...(filter.sortField === 'createdAt' && {
+        sortType: filter.sortDirection,
+      }),
+      columnClass: 'pl-8 md:pl-0',
     },
     {
       key: 'updatedAt',
       label: 'UpdatedAt',
+      render: (key, value) => {
+        const val = value as ICategory;
+        const updatedAtDate = new Date(val.updatedAt);
+        const formattedUpdatedAt = updatedAtDate.toLocaleDateString('en-GB');
+        return <div>{formattedUpdatedAt}</div>;
+      },
       isSorting: true,
-      sortType: sort.sortDirection,
-      // columnClass: 'text-center',
-      // headClass: 'text-center',
+      ...(filter.sortField === 'updatedAt' && {
+        sortType: filter.sortDirection,
+      }),
     },
     {
       key: 'edit',
       label: '',
       render: (key, val) => {
-        console.log('id', val._id);
+        console.log('category-id', val._id);
         return (
           <div key={val._id}>
             <button key={val._id} type="button" onClick={(e) => handleClick(e, val._id)}>
@@ -162,45 +198,61 @@ const Category = () => {
 
   return (
     <div>
-      <div className="text-sm text-gray-500">
-        <Breadcrumbs items={breadcrumbs} />
-      </div>
-      <div className="flex justify-between mt-0">
-        <h1 className="font-bold text-2xl "> Category</h1>
-        <div className="grid grid-cols-[100px,auto] ">
-          <button
-            type="button"
-            // onClick={handleClose}
-            className=" py-1 px-2 w-fit text-gray-900 border-0 rounded-md bg-gray-300 flex gap-1">
-            <CiImport className="text-lg my-0.5" />
-            import
-          </button>
-          <button
-            type="submit"
-            onClick={handleAddCategory}
-            className="py-1.5 px-2 text-gray-900 border-0  rounded-md bg-yellow-500 flex gap-1">
-            <FaPlus className="text-lg my-0.5" />
-            Create Categopry
-          </button>
-        </div>
-      </div>
-      <div>
-        {' '}
-        <div className="mt-4">
-          <div>
-            <Table
-              headClass="text-right"
-              handleSearch={handleSearchCategory}
-              columns={columns}
-              data={filteredCategorys || []}
-              rowsPerPageOption={[5, 10, 15, 25]}
-              isPagination
-              activeSortField={sort.sortField}
-              onSortClick={(key, sortType) => {
-                setSort({ sortField: key as string, sortDirection: sortType });
-              }}
-            />
+      <div className="flex flex-col gap-4">
+        <div>
+          <div className="text-sm text-gray-500">
+            <Breadcrumbs items={breadcrumbs} />
           </div>
+          <div className="flex justify-between mt-0">
+            <h1 className="font-bold text-2xl "> Category</h1>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                className=" p-1.5 text-gray-900 border-0 rounded-md bg-gray-300 flex gap-1">
+                <CiImport className="text-lg my-0.5" />
+                import
+              </button>
+              <button
+                type="submit"
+                onClick={handleCreateCategory}
+                className="p-1.5 text-gray-900 border-0 rounded-md bg-yellow-500 flex gap-1">
+                <FaPlus className="text-lg my-0.5" />
+                Create Categopry
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <Table
+            loading={categoryLoading}
+            columns={columns}
+            count={categoryData?.categories?.totalCount || 0}
+            data={categoryData?.categories?.categories || []}
+            apiPaginationEnable
+            activeSortField={filter.sortField}
+            page={filter.page}
+            pageSize={filter.limit}
+            rowsPerPageOption={[1, 2, 3, 5, 10, 15, 25]}
+            isPagination
+            handlePageChange={(newPage: number) => {
+              setFilter({ ...filter, page: newPage });
+            }}
+            handleRowsPerPageChange={(e) => {
+              setFilter({ ...filter, page: 1, limit: parseInt(e, 10) });
+            }}
+            onHandleSearch={debounce((e) => {
+              setFilter({ ...filter, page: 1, searchText: e.target.value });
+            }, 500)}
+            onSortClick={(key, sortType) => {
+              setFilter({
+                ...filter,
+                page: 1,
+                sortField: key as string,
+                sortDirection: sortType,
+              });
+            }}
+          />
         </div>
       </div>
     </div>

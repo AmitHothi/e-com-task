@@ -17,6 +17,9 @@ const Middleware = async (request: NextRequest): Promise<NextResponse> => {
   const refreshToken = request.cookies.get('refreshToken');
   const path = request.nextUrl.pathname;
   console.log('first', refreshToken);
+  if (!refreshToken && path.includes('/login')) {
+    return NextResponse.next();
+  }
   if (!refreshToken && protectedRoutes.includes(path)) {
     return NextResponse.redirect(new URL('/login', request.nextUrl.origin).toString());
   }
