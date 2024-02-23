@@ -35,7 +35,6 @@ const AddCategory = () => {
   const { data: categoryData } = useQuery(CATEGORIES, {
     fetchPolicy: 'network-only',
   });
-  console.log('allCategories', categoryData);
 
   const [CreateCategory] = useMutation(CREATE_CATEGORY, {
     fetchPolicy: 'network-only',

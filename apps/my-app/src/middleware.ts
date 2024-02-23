@@ -16,7 +16,6 @@ const authRoutes = ['/login', '/register'];
 const Middleware = async (request: NextRequest): Promise<NextResponse> => {
   const refreshToken = request.cookies.get('refreshToken');
   const path = request.nextUrl.pathname;
-  console.log('first', refreshToken);
   if (!refreshToken && path.includes('/login')) {
     return NextResponse.next();
   }

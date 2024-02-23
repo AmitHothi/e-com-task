@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import React, { ChangeEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
@@ -24,7 +24,6 @@ interface IMasterImage {
   altText: string;
   order: string;
   img: string;
-  variantId: string;
 }
 
 export interface ISubProducts {
@@ -42,9 +41,8 @@ const SubProduct = ({
 }: ISubProducts) => {
   const router = useRouter();
   const searchParams = useSearchParams();
-
+  const inputFile = useRef<HTMLInputElement>(null);
   const masterProductId = searchParams.get('id');
-  console.log('search', variantId);
   const [subVariants, setSubVariants] = useState([]);
   const [subValue, setSubValue] = useState<IVariantForm>({
     subProductName: '',
@@ -53,7 +51,6 @@ const SubProduct = ({
     sku: '',
     image: [],
   });
-  const [varId, setVarId] = useState(variantId);
 
   const [
     CreateSubProduct,
@@ -132,39 +129,28 @@ const SubProduct = ({
     setSubValue((prevVariant) => ({ ...prevVariant, [name]: value }));
   };
 
-  // useEffect(() => {
-  //   if (variantId) {
-  //     subProductById({
-  //       variables: { id: variantId },
-  //     });
-  //   }
-  // }, [masterProductId]);
-
   const handleAddVariantImage = async (event: ChangeEvent<HTMLInputElement>) => {
     const id = randomBytes(16).toString('hex');
-    console.log({ varId });
-    // const imgArray = variants.find((val) => val.id === variantId);
-    // if (event.target.files && event.target.files[0]) {
-    //   const formData = new FormData();
-    //   const token = getCookie('token');
-    //   formData.append('files', event.target.files[0]);
-    //   const response = await axios.post(`${process.env.BASE_URL}/images/upload`, formData, {
-    //     headers: {
-    //       'Content-Type': 'multipart/formData',
-    //       Authorization: `Bearer ${token}`,
-    //     },
-    //   });
-    //   const res = response.data;
-    //   console.log(res);
-    //   const valueImage: IMasterImage = { id, variantId, altText: '', order: '', img: res[0] };
-    //   // const value = { imgId: id, variantId, file: event.target.files[0] };
-    //   console.log({ valueImage });
-    //   setSubValue((prevVariant) => ({
-    //     ...prevVariant,
-    //     image: [...prevVariant.image, valueImage],
-    //   }));
-    //   // setVariantImage((prev) => [...prev, value]);
-    // }
+    if (event.target.files && event.target.files[0]) {
+      const formData = new FormData();
+      const token = getCookie('token');
+      formData.append('files', event.target.files[0]);
+      const response = await axios.post(`${process.env.BASE_URL}/images/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/formData',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const res = response.data;
+      console.log(res);
+      const valueImage: IMasterImage = { id, altText: '', order: '', img: res[0] };
+      // const value = { imgId: id, variantId, file: event.target.files[0] };
+      console.log({ valueImage });
+      setSubValue((prevVariant) => ({
+        ...prevVariant,
+        image: [...prevVariant.image, valueImage],
+      }));
+    }
   };
 
   const handleImageTextVariant = (
@@ -202,7 +188,6 @@ const SubProduct = ({
       image: subValue.image.filter((img) => img.id !== imgVariantId),
     }));
   };
-  console.log('V', varId);
 
   return (
     <div className="p-4 bg-white min-w-full border-0 rounded-md ">
@@ -379,27 +364,26 @@ const SubProduct = ({
       })}
 
       <div>
-        <label htmlFor="upload-VariantImage" className="text-yellow-500 font-semibold w-fit">
-          <h5>Upload Your Images</h5>
-          <input
-            key={varId}
-            id="upload-VariantImage"
-            type="file"
-            style={{ display: 'none' }}
-            accept="image/*"
-            onChange={(e) => {
-              console.log('vId', varId);
-              handleAddVariantImage(e);
-            }}
-          />
-          <button
-            type="button"
-            onClick={(e) => {
-              console.log('vId', varId);
-            }}>
-            VariantId
-          </button>
-        </label>
+        <input
+          className="hidden"
+          key={variantId}
+          ref={inputFile}
+          id="upload-VariantImage"
+          type="file"
+          style={{ display: 'none' }}
+          accept="image/*"
+          onChange={(e) => {
+            handleAddVariantImage(e);
+          }}
+        />
+        <button
+          type="button"
+          className="text-yellow-500 font-semibold w-fit"
+          onClick={(e) => {
+            inputFile?.current?.click();
+          }}>
+          Upload Your Image
+        </button>
       </div>
     </div>
   );

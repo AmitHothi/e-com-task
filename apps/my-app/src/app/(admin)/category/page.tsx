@@ -58,7 +58,6 @@ const Category = () => {
       searchFields: filter.searchField,
     },
   });
-  console.log('data', categoryData?.categories?.categories);
 
   const [RemoveCategory, { data, loading, error }] = useMutation(REMOVE_CATEGORY, {
     fetchPolicy: 'network-only',
@@ -91,7 +90,6 @@ const Category = () => {
       variables: { id: categoryId },
     })
       .then((res) => {
-        console.log('category-remove', res.data);
         refetch();
       })
       .catch((err) => console.log('removeCategory-error', err));
@@ -154,45 +152,42 @@ const Category = () => {
     {
       key: 'edit',
       label: '',
-      render: (key, val) => {
-        console.log('category-id', val._id);
-        return (
-          <div key={val._id}>
-            <button key={val._id} type="button" onClick={(e) => handleClick(e, val._id)}>
-              <HiOutlineDotsVertical />
-              <span className="sr-only">Edit</span>
-            </button>
-            <Popover
-              key={val._id}
-              id={val._id}
-              selectedId={selectedPopoverId}
-              className=" mr-auto"
-              anchorEl={anchorEl}
-              handleOnClose={handleClose}
-              adjustHorizontalPosition={10}>
-              <ul className="bg-white rounded-md  text-sm flex flex-col ">
-                <li className="w-full my-1 p-2 text-gray-900 hover:bg-gray-100 dark:hover:bg-zinc-200 group">
-                  <button
-                    type="button"
-                    className="w-full"
-                    onClick={() => handleEditCategory(val._id)}>
-                    Edit
-                  </button>
-                </li>
-                <hr />
-                <li className="w-full my-1 p-2 text-gray-900 hover:bg-gray-100 dark:hover:bg-zinc-200 group">
-                  <button
-                    type="button"
-                    className="w-full"
-                    onClick={() => handleDeleteCategory(val._id)}>
-                    Delete
-                  </button>
-                </li>
-              </ul>
-            </Popover>
-          </div>
-        );
-      },
+      render: (key, val) => (
+        <div key={val._id}>
+          <button key={val._id} type="button" onClick={(e) => handleClick(e, val._id)}>
+            <HiOutlineDotsVertical />
+            <span className="sr-only">Edit</span>
+          </button>
+          <Popover
+            key={val._id}
+            id={val._id}
+            selectedId={selectedPopoverId}
+            className=" mr-auto"
+            anchorEl={anchorEl}
+            handleOnClose={handleClose}
+            adjustHorizontalPosition={10}>
+            <ul className="bg-white rounded-md  text-sm flex flex-col ">
+              <li className="w-full my-1 p-2 text-gray-900 hover:bg-gray-100 dark:hover:bg-zinc-200 group">
+                <button
+                  type="button"
+                  className="w-full"
+                  onClick={() => handleEditCategory(val._id)}>
+                  Edit
+                </button>
+              </li>
+              <hr />
+              <li className="w-full my-1 p-2 text-gray-900 hover:bg-gray-100 dark:hover:bg-zinc-200 group">
+                <button
+                  type="button"
+                  className="w-full"
+                  onClick={() => handleDeleteCategory(val._id)}>
+                  Delete
+                </button>
+              </li>
+            </ul>
+          </Popover>
+        </div>
+      ),
     },
   ];
 
@@ -239,7 +234,7 @@ const Category = () => {
               setFilter({ ...filter, page: newPage });
             }}
             handleRowsPerPageChange={(e) => {
-              setFilter({ ...filter, page: 1, limit: parseInt(e, 10) });
+              setFilter({ ...filter, page: 1, limit: e });
             }}
             onHandleSearch={debounce((e) => {
               setFilter({ ...filter, page: 1, searchText: e.target.value });
